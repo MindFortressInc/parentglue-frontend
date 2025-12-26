@@ -214,6 +214,29 @@ class ApiClient {
       note: string;
     }>(`/api/resources/providers/aba?county=${county}`);
   }
+
+  // Document/Letter endpoints
+  async getLetterTemplates() {
+    return this.fetch<{
+      count: number;
+      categories: string[];
+      templates: LetterTemplate[];
+      by_category: Record<string, LetterTemplate[]>;
+    }>("/api/documents/templates");
+  }
+
+  async getLetterTemplate(templateType: string) {
+    return this.fetch<LetterTemplate & { field_hints: Record<string, FieldHint> }>(
+      `/api/documents/templates/${templateType}`
+    );
+  }
+
+  async generateLetter(request: LetterRequest) {
+    return this.fetch<GeneratedLetter>("/api/documents/generate", {
+      method: "POST",
+      body: JSON.stringify(request),
+    });
+  }
 }
 
 export interface Resource {
@@ -291,36 +314,6 @@ export interface FieldHint {
   placeholder: string;
   required: boolean;
 }
-
-// Add to ApiClient class
-declare module "./api" {
-  interface ApiClient {
-    getLetterTemplates(): Promise<{
-      count: number;
-      categories: string[];
-      templates: LetterTemplate[];
-      by_category: Record<string, LetterTemplate[]>;
-    }>;
-    getLetterTemplate(templateType: string): Promise<LetterTemplate & { field_hints: Record<string, FieldHint> }>;
-    generateLetter(request: LetterRequest): Promise<GeneratedLetter>;
-  }
-}
-
-// Extend ApiClient with document methods
-ApiClient.prototype.getLetterTemplates = async function() {
-  return this.fetch("/api/documents/templates");
-};
-
-ApiClient.prototype.getLetterTemplate = async function(templateType: string) {
-  return this.fetch(`/api/documents/templates/${templateType}`);
-};
-
-ApiClient.prototype.generateLetter = async function(request: LetterRequest) {
-  return this.fetch("/api/documents/generate", {
-    method: "POST",
-    body: JSON.stringify(request),
-  });
-};
 
 export const api = new ApiClient();
 export default api;
