@@ -240,7 +240,7 @@ export default function Home() {
           Built for California families navigating special needs services.
         </p>
         <p className="text-sm text-[var(--muted)] mt-1 font-medium">
-          Created by parents who get it
+          Created by a neurodivergent family
         </p>
       </footer>
     </div>
