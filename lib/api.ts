@@ -1,319 +1,103 @@
-/**
- * API client for ParentGlue backend
- */
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8004';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8004";
+export async function api(path: string, options: RequestInit = {}) {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('pg_token') : null;
 
-export interface ChildProfile {
-  id?: string;
-  name: string;
-  date_of_birth: string;
-  county: string;
-  regional_center?: string;
-  diagnosis_status: DiagnosisStatus;
-  diagnosis_date?: string;
-  rc_status: RegionalCenterStatus;
-  current_ipp_date?: string;
-  school_status: SchoolStatus;
-  current_iep_date?: string;
-  insurance_type: InsuranceType;
-  insurance_carrier?: string;
-  has_aba?: boolean;
-  aba_auth_expiry?: string;
-  has_speech?: boolean;
-  has_ot?: boolean;
-}
+  const response = await fetch(`${API_URL}${path}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...options.headers,
+    },
+  });
 
-export type DiagnosisStatus =
-  | "suspected"
-  | "in_evaluation"
-  | "diagnosed"
-  | "diagnosed_other";
-
-export type RegionalCenterStatus =
-  | "not_connected"
-  | "intake_pending"
-  | "in_evaluation"
-  | "eligible"
-  | "not_eligible";
-
-export type SchoolStatus =
-  | "not_school_age"
-  | "no_iep"
-  | "evaluation_pending"
-  | "has_iep";
-
-export type InsuranceType =
-  | "private_fully_insured"
-  | "private_self_funded"
-  | "medi_cal"
-  | "regional_center_only"
-  | "none";
-
-export interface TimelineEvent {
-  id: string;
-  title: string;
-  description: string;
-  due_date?: string;
-  category: string;
-  priority: string;
-  status: string;
-  action_items: string[];
-  resources: string[];
-}
-
-export interface Timeline {
-  child_name: string;
-  generated_at: string;
-  overdue: TimelineEvent[];
-  due_soon: TimelineEvent[];
-  upcoming: TimelineEvent[];
-  completed: TimelineEvent[];
-  total_events: number;
-  next_action?: TimelineEvent;
-}
-
-export interface OnboardingStep1 {
-  name: string;
-  date_of_birth: string;
-  county: string;
-}
-
-export interface OnboardingStep2 {
-  diagnosis_status: DiagnosisStatus;
-  diagnosis_date?: string;
-}
-
-export interface OnboardingStep3 {
-  rc_status: RegionalCenterStatus;
-  school_status: SchoolStatus;
-  insurance_type: InsuranceType;
-}
-
-class ApiClient {
-  private baseUrl: string;
-
-  constructor(baseUrl: string = API_BASE) {
-    this.baseUrl = baseUrl;
+  if (response.status === 401 && typeof window !== 'undefined') {
+    localStorage.removeItem('pg_token');
+    window.location.href = '/portal/login';
   }
 
-  private async fetch<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...options.headers,
-      },
+  return response;
+}
+
+// Provider types
+export const PROVIDER_TYPES = [
+  { value: 'aba_therapy', label: 'ABA Therapy' },
+  { value: 'speech_therapy', label: 'Speech Therapy' },
+  { value: 'occupational_therapy', label: 'Occupational Therapy' },
+  { value: 'developmental_pediatrician', label: 'Developmental Pediatrician' },
+  { value: 'neuropsychologist', label: 'Neuropsychologist' },
+  { value: 'iep_advocate', label: 'IEP Advocate' },
+  { value: 'special_ed_attorney', label: 'Special Ed Attorney' },
+  { value: 'respite_care', label: 'Respite Care' },
+  { value: 'social_skills_group', label: 'Social Skills Group' },
+  { value: 'early_intervention', label: 'Early Intervention' },
+];
+
+// US States
+export const US_STATES = [
+  { value: 'AL', label: 'Alabama' }, { value: 'AK', label: 'Alaska' },
+  { value: 'AZ', label: 'Arizona' }, { value: 'AR', label: 'Arkansas' },
+  { value: 'CA', label: 'California' }, { value: 'CO', label: 'Colorado' },
+  { value: 'CT', label: 'Connecticut' }, { value: 'DE', label: 'Delaware' },
+  { value: 'FL', label: 'Florida' }, { value: 'GA', label: 'Georgia' },
+  { value: 'HI', label: 'Hawaii' }, { value: 'ID', label: 'Idaho' },
+  { value: 'IL', label: 'Illinois' }, { value: 'IN', label: 'Indiana' },
+  { value: 'IA', label: 'Iowa' }, { value: 'KS', label: 'Kansas' },
+  { value: 'KY', label: 'Kentucky' }, { value: 'LA', label: 'Louisiana' },
+  { value: 'ME', label: 'Maine' }, { value: 'MD', label: 'Maryland' },
+  { value: 'MA', label: 'Massachusetts' }, { value: 'MI', label: 'Michigan' },
+  { value: 'MN', label: 'Minnesota' }, { value: 'MS', label: 'Mississippi' },
+  { value: 'MO', label: 'Missouri' }, { value: 'MT', label: 'Montana' },
+  { value: 'NE', label: 'Nebraska' }, { value: 'NV', label: 'Nevada' },
+  { value: 'NH', label: 'New Hampshire' }, { value: 'NJ', label: 'New Jersey' },
+  { value: 'NM', label: 'New Mexico' }, { value: 'NY', label: 'New York' },
+  { value: 'NC', label: 'North Carolina' }, { value: 'ND', label: 'North Dakota' },
+  { value: 'OH', label: 'Ohio' }, { value: 'OK', label: 'Oklahoma' },
+  { value: 'OR', label: 'Oregon' }, { value: 'PA', label: 'Pennsylvania' },
+  { value: 'RI', label: 'Rhode Island' }, { value: 'SC', label: 'South Carolina' },
+  { value: 'SD', label: 'South Dakota' }, { value: 'TN', label: 'Tennessee' },
+  { value: 'TX', label: 'Texas' }, { value: 'UT', label: 'Utah' },
+  { value: 'VT', label: 'Vermont' }, { value: 'VA', label: 'Virginia' },
+  { value: 'WA', label: 'Washington' }, { value: 'WV', label: 'West Virginia' },
+  { value: 'WI', label: 'Wisconsin' }, { value: 'WY', label: 'Wyoming' },
+];
+
+// Lead tracking
+export async function trackLead(providerId: number, data: {
+  lead_type: 'contact_click' | 'phone_reveal' | 'website_click' | 'booking_click';
+  source_page: 'search_results' | 'provider_profile';
+}) {
+  try {
+    await fetch(`${API_URL}/api/leads/track/${providerId}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
     });
-
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-
-    return response.json();
-  }
-
-  // Onboarding endpoints
-  async startOnboarding(step1: OnboardingStep1) {
-    return this.fetch<{
-      profile: Partial<ChildProfile>;
-      age: { years: number; months: number; description: string };
-      regional_center_info: { code: string; name: string; phone?: string };
-      next_step: string;
-    }>("/api/onboarding/start", {
-      method: "POST",
-      body: JSON.stringify(step1),
-    });
-  }
-
-  async setDiagnosis(step1: OnboardingStep1, step2: OnboardingStep2) {
-    return this.fetch<{
-      profile: Partial<ChildProfile>;
-      guidance: { title: string; message: string; actions: string[] };
-      next_step: string;
-    }>("/api/onboarding/diagnosis", {
-      method: "POST",
-      body: JSON.stringify({ ...step1, ...step2 }),
-    });
-  }
-
-  async completeOnboarding(
-    step1: OnboardingStep1,
-    step2: OnboardingStep2,
-    step3: OnboardingStep3
-  ) {
-    return this.fetch<{
-      profile: ChildProfile;
-      immediate_actions: string[];
-      timeline_preview: TimelineEvent[];
-    }>("/api/onboarding/complete", {
-      method: "POST",
-      body: JSON.stringify({ ...step1, ...step2, ...step3 }),
-    });
-  }
-
-  async getCounties() {
-    return this.fetch<{
-      counties: { name: string; regional_center: string }[];
-      note: string;
-    }>("/api/onboarding/counties");
-  }
-
-  // Timeline endpoints
-  async generateTimeline(profile: ChildProfile): Promise<Timeline> {
-    return this.fetch<Timeline>("/api/timeline/generate", {
-      method: "POST",
-      body: JSON.stringify(profile),
-    });
-  }
-
-  async getTimelinePreview(profile: ChildProfile) {
-    return this.fetch<{
-      child_name: string;
-      total_events: number;
-      overdue_count: number;
-      next_action?: TimelineEvent;
-      preview: TimelineEvent[];
-    }>("/api/timeline/preview", {
-      method: "POST",
-      body: JSON.stringify(profile),
-    });
-  }
-
-  async getDemoTimeline(): Promise<Timeline> {
-    return this.fetch<Timeline>("/api/timeline/demo");
-  }
-
-  // Resources endpoints
-  async getResources(category?: string) {
-    const url = category
-      ? `/api/resources/?category=${category}`
-      : "/api/resources/";
-    return this.fetch<{ count: number; resources: Resource[] }>(url);
-  }
-
-  async getResource(resourceId: string) {
-    return this.fetch<Resource>(`/api/resources/${resourceId}`);
-  }
-
-  async getResourceCategories() {
-    return this.fetch<{
-      categories: { id: string; name: string }[];
-    }>("/api/resources/categories/list");
-  }
-
-  async getAbaProviders(county: string = "sacramento") {
-    return this.fetch<{
-      county: string;
-      provider_type: string;
-      count: number;
-      providers: Provider[];
-      note: string;
-    }>(`/api/resources/providers/aba?county=${county}`);
-  }
-
-  // Document/Letter endpoints
-  async getLetterTemplates() {
-    return this.fetch<{
-      count: number;
-      categories: string[];
-      templates: LetterTemplate[];
-      by_category: Record<string, LetterTemplate[]>;
-    }>("/api/documents/templates");
-  }
-
-  async getLetterTemplate(templateType: string) {
-    return this.fetch<LetterTemplate & { field_hints: Record<string, FieldHint> }>(
-      `/api/documents/templates/${templateType}`
-    );
-  }
-
-  async generateLetter(request: LetterRequest) {
-    return this.fetch<GeneratedLetter>("/api/documents/generate", {
-      method: "POST",
-      body: JSON.stringify(request),
-    });
+  } catch (e) {
+    console.error('Lead tracking failed:', e);
   }
 }
 
-export interface Resource {
-  id: string;
-  title: string;
-  category: string;
-  summary: string;
-  content_path?: string;
-  quick_facts?: string[];
-  key_contacts?: Record<string, string>;
-  tips?: string[];
-  timeline?: { age: string; action: string }[];
+// Search providers
+export async function searchProviders(params: {
+  city: string;
+  state: string;
+  provider_type: string;
+}) {
+  const query = new URLSearchParams(params).toString();
+  const res = await fetch(`${API_URL}/api/providers/search?${query}`);
+  return res.json();
 }
 
-export interface Provider {
-  name: string;
-  type: string;
-  address?: string;
-  phone?: string;
-  website?: string;
-  accepts_insurance?: boolean;
-  notes?: string;
+// Get provider details
+export async function getProvider(id: number) {
+  const res = await fetch(`${API_URL}/api/providers/${id}`);
+  return res.json();
 }
 
-// Letter/Document types
-export type LetterType =
-  | "iep_evaluation_request"
-  | "iep_meeting_request"
-  | "prior_written_notice_request"
-  | "iee_request"
-  | "rc_intake_request"
-  | "insurance_appeal"
-  | "aba_auth_request"
-  | "records_request"
-  | "esy_request";
-
-export interface LetterTemplate {
-  type: LetterType;
-  title: string;
-  description: string;
-  category: string;
-  urgency_note: string;
-  legal_basis: string;
+// Get provider lead stats (for claim banner)
+export async function getProviderLeadStats(id: number) {
+  const res = await fetch(`${API_URL}/api/leads/provider/${id}/stats`);
+  return res.json();
 }
-
-export interface LetterRequest {
-  letter_type: LetterType;
-  profile: ChildProfile;
-  parent_name: string;
-  parent_address?: string;
-  // Optional context fields
-  concerns?: string;
-  reason?: string;
-  request_denied?: string;
-  evaluation_area?: string;
-  disagreement?: string;
-  denial_reason?: string;
-  service_denied?: string;
-  hours_requested?: string;
-  regression_evidence?: string;
-}
-
-export interface GeneratedLetter {
-  letter_type: string;
-  title: string;
-  content: string;
-  generated_at: string;
-  child_name: string;
-  instructions: string;
-  legal_basis: string;
-}
-
-export interface FieldHint {
-  label: string;
-  placeholder: string;
-  required: boolean;
-}
-
-export const api = new ApiClient();
-export default api;
