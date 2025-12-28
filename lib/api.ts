@@ -252,6 +252,12 @@ export interface RegionalOffice {
   eligibility_summary?: string;
   age_range?: string;
   diagnosis_requirements?: string;
+  application_process?: string;
+  required_documents?: string[];
+  self_referral_allowed?: boolean | null;
+  typical_wait_time?: string;
+  assessment_timeline?: string;
+  service_start_timeline?: string;
 }
 
 export interface ChildProfile {
