@@ -241,10 +241,17 @@ export interface RegionalOffice {
   office_type: string;
   address?: string;
   city?: string;
+  zip?: string;
   phone?: string;
+  intake_phone?: string;
   email?: string;
   website?: string;
+  hours?: string;
   counties_served: string[];
+  services_offered?: string[];
+  eligibility_summary?: string;
+  age_range?: string;
+  diagnosis_requirements?: string;
 }
 
 export interface ChildProfile {
